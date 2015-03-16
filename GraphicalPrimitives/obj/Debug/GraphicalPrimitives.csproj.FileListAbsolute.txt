@@ -1,0 +1,6 @@
+D:\Vladymyr\Graphics\SDLForNETTutorial\SDLForNETTutorial\bin\Debug\SDLForNETTutorial.exe.config
+D:\Vladymyr\Graphics\SDLForNETTutorial\SDLForNETTutorial\bin\Debug\SDLForNETTutorial.exe
+D:\Vladymyr\Graphics\SDLForNETTutorial\SDLForNETTutorial\bin\Debug\SDLForNETTutorial.pdb
+D:\Vladymyr\Graphics\SDLForNETTutorial\SDLForNETTutorial\obj\Debug\SDLForNETTutorial.exe
+D:\Vladymyr\Graphics\SDLForNETTutorial\SDLForNETTutorial\obj\Debug\SDLForNETTutorial.pdb
+D:\Vladymyr\Graphics\SDLForNETTutorial\SDLForNETTutorial\obj\Debug\GraphicalPrimitives.csprojResolveAssemblyReference.cache
