@@ -55,8 +55,10 @@ public class SDL
 
         //BrezengamCircle(40, 40, 25, Color.Khaki);
         BrezengamCircle(60, 60, 30, Color.LawnGreen);
+
+
+        BresenhamEllipse(120, 120, 75, 24, Color.Brown);
         
-           
         m_ForegroundPosition = new Point(m_VideoScreen.Width / 2 - m_Foreground.Width / 2,
                                             m_VideoScreen.Height / 2 - m_Foreground.Height / 2);
     }
@@ -74,13 +76,72 @@ public class SDL
     }
 
 
-    private static void SimpleLine(double _x1, double _y1, double _x2, double _y2, Color col)
+
+    //set 4 pixels used in ellipse
+    private static void Set4Pixels(int xc, int yc, int x, int y, Color col)
     {
-        //making pseudo pixels
         Color[,] color;
         color = new Color[1, 1];
         color[0, 0] = col;
-    
+        m_Foreground.SetPixels(new Point(xc+x, yc + y), color);
+        m_Foreground.SetPixels(new Point(xc-x, yc + y), color);
+        m_Foreground.SetPixels(new Point(xc+x, yc-y), color);
+        m_Foreground.SetPixels(new Point(xc - x ,yc - y), color);
+       
+    }
+
+
+
+
+    public static void BresenhamEllipse(int _x, int _y, int radiusX, int radiusY, Color col)
+    {
+        //int _x = __x * 3;
+        //int _y = __y * 3;
+        //int radiusX = _radiusX * 3;
+        //int radiusY = _radiusY * 3;
+        int x = 0,
+            y = radiusY;
+        int xr2 = radiusX * radiusX * 2,
+            yr2 = radiusY * radiusY * 2,
+            d = (yr2 - xr2 * y) + xr2 / 2;
+        float xm = (float)xr2 / (float)Math.Sqrt((yr2 + xr2) * 2) - 1;
+        Set4Pixels(_x, _y, x, y, col);
+        while (x < xm)
+        {
+            if (d > 0)
+            {
+                y-=1;
+                d += yr2 * (x * 2 + 3) - xr2 * y * 2;
+            }
+            else
+            {
+                d += yr2 * (x * 2 + 3);
+            }
+            x++;
+            Set4Pixels(_x, _y, x, y, col);
+        }
+        d = (xr2 - yr2 * radiusX) + yr2 / 2;
+        x = radiusX;
+        y = 0;
+        Set4Pixels(_x, _y, x, y, col);
+        while (x > xm)
+        {
+            if (d > 0)
+            {
+                x-=1;
+                d += xr2 * (y * 2 + 3) - yr2 * x * 2;
+            }
+            else
+            {
+                d += xr2 * (y * 2 + 3);
+            }
+            y++;
+            Set4Pixels(_x, _y, x, y, col);
+        }
+    }
+
+    private static void SimpleLine(double _x1, double _y1, double _x2, double _y2, Color col)
+    {
         double one = 3;
         double x1 = _x1;
         double y1 = _y1 ;
@@ -99,8 +160,8 @@ public class SDL
         ////////////////////////////////////////
         double x = x1;
         double y = y1;
-            
-        m_Foreground.SetPixels(new Point((int)x,(int) y), color);
+
+        PutPixel(col, (int)x, (int)y, 255);
         for (int i = 0; i < L; i++)
         {
             if (x1 != x2)
@@ -114,7 +175,7 @@ public class SDL
                 double dy = (y2 - y1) / L;
                 y = y +  dy;
             }
-            m_Foreground.SetPixels(new Point((int)x, (int)y), color);
+            PutPixel(col, (int)x, (int)y, 255);
         }
     }
 
@@ -139,8 +200,7 @@ public class SDL
     //Аппаратная реализация этого алгоритма изложена в пункте 8.1 первой части курса. 
     //Субъективно лучше смотрятся вектора с единичным шагом по большей относительной координате (несимметричный ЦДА). Для Px > Py (при Px, Py > 0) это означает, что координата по X направлению должна увеличиться на 1 Px раз, а координата по Y-направлению должна также Px раз увеличиться, но на Py/Px. 
 
-            /*-----------------------------------------------------  V_DDA
-     * void V_DDA (int xn, int yn, int xk, int yk)
+            /*----------------------------------------------------- 
      *
      * Подпрограмма построения вектора из точки (xn,yn)
      * в точку (xk, yk) в первом квадранте методом
@@ -187,18 +247,6 @@ public class SDL
      */
     private static void NonSymCDALine(int _x1, int _y1, int _x2, int _y2, Color col)
     {
-        //making pseudo pixels
-        Color[,] color;
-        color = new Color[3, 3];
-        color[0, 0] = col;
-        color[0, 1] = col;
-        color[0, 2] = col;
-        color[1, 0] = col;
-        color[1, 1] = col;
-        color[1, 2] = col;
-        color[2, 0] = col;
-        color[2, 1] = col;
-        color[2, 2] = col;
         int one = 3;
         int x1 = _x1 * 3;
         int y1 = _y1 * 3;
@@ -217,12 +265,12 @@ public class SDL
         if (dx == 0 && dy == 0) return;
 
         dx = dx + one; dy = dy + one;
-        m_Foreground.SetPixels(new Point(x1, y1), color);
+        PutPseudoPixel(col, x1, y1, 255); ;
         if (dy == dx) {                 /* Наклон == 45 градусов */
             while (x1 < x2)
             {
                 x1 = x1 + one;
-                m_Foreground.SetPixels(new Point(x1, x1), color);
+                PutPseudoPixel(col, x1, y1, 255); ;
             }
         }
         else if (dx > dy)
@@ -233,7 +281,7 @@ public class SDL
                 x1 = x1 + one;
                 s = s + dy;
                 if (s >= dx) { s = s - dx; y1 = y1 + one; }
-                m_Foreground.SetPixels(new Point(x1, y1), color); ;
+                PutPseudoPixel(col, x1, y1, 255); ; ;
             }
         }
         else
@@ -244,7 +292,7 @@ public class SDL
                 y1 = y1 + one;
                 s = s + dx;
                 if (s >= dy) { s = s - dy; x1 = x1 + one; }
-                m_Foreground.SetPixels(new Point(x1, y1), color);
+                PutPseudoPixel(col, x1, y1, 255); ;
             }
         }
     }
@@ -287,18 +335,6 @@ public class SDL
      */
     private static void BrezengamLine(int _x1, int _y1, int _x2, int _y2, Color col)
     {
-        //making pseudo pixels
-        Color[,] color;
-        color = new Color[3, 3];
-        color[0, 0] = col;
-        color[0, 1] = col;
-        color[0, 2] = col;
-        color[1, 0] = col;
-        color[1, 1] = col;
-        color[1, 2] = col;
-        color[2, 0] = col;
-        color[2, 1] = col;
-        color[2, 2] = col;
         int one = 3;
         int x1 = _x1 * 3;
         int y1 = _y1 * 3;
@@ -323,15 +359,15 @@ public class SDL
         incr2= 2*dx;         /* Константа для перевычисления    */
                             /* разности если текущее s >= 0    */
             /* Первый  пиксел вектора       */
-        m_Foreground.SetPixels(new Point(x1, y1), color);
-        while ((kl-=one) >= 0) {
+        PutPseudoPixel(col, x1, y1, 255);
+        while ((kl -= one) >= 0) {
             if (s >= 0) {
-                if (swap > 0) x1+= sx; else y1+= sy;
-                s-= incr2;
+                if (swap > 0) x1 += sx; else y1 += sy;
+                s -= incr2;
             }
-            if (swap>0) y1+= sy; else x1+= sx;
-            s+=  incr1;
-            m_Foreground.SetPixels(new Point(x1, y1), color); /* Текущая  точка  вектора   */
+            if (swap>0) y1 += sy; else x1 += sx;
+            s += incr1;
+            PutPseudoPixel(col, x1, y1, 255); /* Текущая  точка  вектора   */
         }
     }
 
@@ -339,20 +375,9 @@ public class SDL
         
 
        
-
+    //uses Put Pixel . Writes part of circle
     private static void BrezengamCircle(int _xc, int _yc, int _r, Color col)
     {
-        Color[,] color;
-        color = new Color[3, 3];
-        color[0, 0] = col;
-        color[0, 1] = col;
-        color[0, 2] = col;
-        color[1, 0] = col;
-        color[1, 1] = col;
-        color[1, 2] = col;
-        color[2, 0] = col;
-        color[2, 1] = col;
-        color[2, 2] = col;
         int xc = _xc * 3;
         int yc = _yc * 3;
         int r = _r * 3;
@@ -377,33 +402,19 @@ public class SDL
         }
     }
 
-    static void Pixel_circle (int _xc, int _yc, int _x, int  _y,  Color col)
+
+    //Sets 8 points of circle
+    static void Pixel_circle (int xc, int yc, int x, int  y,  Color col)
     {
-        Color[,] color;
-        color = new Color[3, 3];
-        color[0, 0] = col;
-        color[0, 1] = col;
-        color[0, 2] = col;
-        color[1, 0] = col;
-        color[1, 1] = col;
-        color[1, 2] = col;
-        color[2, 0] = col;
-        color[2, 1] = col;
-        color[2, 2] = col;
-        int xc = _xc;
-        int yc = _yc;
-        int x = _x;
-        int y = _y;
-            
-        m_Foreground.SetPixels(new Point(xc + x, yc + y), color);
-        m_Foreground.SetPixels(new Point(xc + y, yc + x), color);
-        m_Foreground.SetPixels(new Point(xc + y, yc - x), color);
-        m_Foreground.SetPixels(new Point(xc + x, yc - y), color);
-        m_Foreground.SetPixels(new Point(xc - x, yc - y), color);
-        m_Foreground.SetPixels(new Point(xc - y, yc - x), color);
-        m_Foreground.SetPixels(new Point(xc - y, yc + x), color);
-        m_Foreground.SetPixels(new Point(xc - x, yc + y), color);
-        }  /* Pixel_circle */
+        PutPseudoPixel(col, xc + x, yc + y, 255);
+        PutPseudoPixel(col, xc + y, yc + x, 255);
+        PutPseudoPixel(col, xc + y, yc - x, 255);
+        PutPseudoPixel(col, xc + x, yc - y, 255);
+        PutPseudoPixel(col, xc - x, yc - y, 255);
+        PutPseudoPixel(col, xc - y, yc - x, 255);
+        PutPseudoPixel(col, xc - y, yc + x, 255);
+        PutPseudoPixel(col, xc - x, yc + y, 255);
+    }  /* Pixel_circle */
 
 
    
@@ -438,19 +449,19 @@ public class SDL
             //Промежуточная переменная для Y
             float intery = y0 + grad;
             //Первая точка
-            PutPixel(clr, x0, y0, 255);
+            PutPseudoPixel(clr, x0, y0, 255);
 
             for (int x = x0 + 1; x < x1; x++)
             {
                 //Верхняя точка
-                PutPixel(clr, x, IPart(intery), (int)(255 - FPart(intery) * 255));
+                PutPseudoPixel(clr, x, IPart(intery), (int)(255 - FPart(intery) * 255));
                 //Нижняя точка
-                PutPixel(clr, x, IPart(intery) + 1, (int)(FPart(intery) * 255));
+                PutPseudoPixel(clr, x, IPart(intery) + 1, (int)(FPart(intery) * 255));
                 //Изменение координаты Y
                 intery += grad;
             }
             //Последняя точка
-            PutPixel(clr, x1, y1, 255);
+            PutPseudoPixel(clr, x1, y1, 255);
         }
         //Для Y-линии (коэффициент наклона > 1)
         else
@@ -466,23 +477,24 @@ public class SDL
             //Промежуточная переменная для X
             float interx = x0 + grad;
             //Первая точка
-            PutPixel(clr, x0, y0, 255);
+            PutPseudoPixel(clr, x0, y0, 255);
 
             for (int y = y0 + 1; y < y1; y++)
             {
                 //Верхняя точка
-                PutPixel(clr, IPart(interx), y, 255 - (int)(FPart(interx) * 255));
+                PutPseudoPixel(clr, IPart(interx), y, 255 - (int)(FPart(interx) * 255));
                 //Нижняя точка
-                PutPixel(clr, IPart(interx) + 1, y, (int)(FPart(interx) * 255));
+                PutPseudoPixel(clr, IPart(interx) + 1, y, (int)(FPart(interx) * 255));
                 //Изменение координаты X
                 interx += grad;
             }
             //Последняя точка
-            PutPixel( clr, x1, y1, 255);
+            PutPseudoPixel( clr, x1, y1, 255);
         }
     }
 
-    private static void PutPixel(Color col, int  x, int  y, int alpha)
+    //puts 9 pixels as rect 3/3
+    private static void PutPseudoPixel(Color col, int  x, int  y, int alpha)
     {
         Color[,] color;
         color = new Color[3, 3];
@@ -498,12 +510,21 @@ public class SDL
         m_Foreground.SetPixels(new Point(x, y), color);
     }
 
-    //Целая часть числа
+    //puts simple pixel
+    private static void PutPixel(Color col, int x, int y, int alpha)
+    {
+        Color[,] color;
+        color = new Color[1, 1];
+        color[0, 0] = Color.FromArgb(alpha, col);
+        m_Foreground.SetPixels(new Point(x, y), color);
+    }
+
+    //int part
     private static int IPart(float x)
     {
         return (int)x;
     }
-    //дробная часть числа
+    //float part
     private static float FPart(float x)
     {
         while (x >= 0)
